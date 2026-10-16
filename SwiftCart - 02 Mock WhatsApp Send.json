@@ -1,0 +1,67 @@
+{
+  "name": "SwiftCart - 02 Mock WhatsApp Send",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mock-whatsapp-send",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4904d2b5-3a40-404f-86be-3c4aaa018034",
+      "name": "Webhook",
+      "webhookId": "d99ce974-0914-4a06-b8f9-6cb7e96647b9"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"contacts\": [{ \"input\": \"{{ $json.body.to }}\", \"wa_id\": \"{{ $json.body.to }}\" }],\n  \"messages\": [{ \"id\": \"wamid.MOCK001\" }]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "3482b5f0-32f2-4be8-8139-1d2576c7fcc2",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "EBrYyHyQduzLWJFT",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "6d3c0419-dd09-4109-8ccd-9057e28bb575",
+  "meta": {
+    "instanceId": "4d55bd4cc83f56b00c3bda6e5957c150430c92e73f9b7e1f610a24039998b340"
+  },
+  "nodeGroups": [],
+  "id": "iRnRdIpHEwqSYHAm",
+  "tags": []
+}

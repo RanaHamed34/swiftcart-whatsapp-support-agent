@@ -1,0 +1,2252 @@
+{
+  "name": "SwiftCart - 01 Support Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-agent-p8",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ed6fe21b-90dd-4585-be52-927b944cacdc",
+      "name": "Webhook",
+      "webhookId": "6188003e-7a05-49cc-9c88-aa103fa258a7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fa334014-f4f5-40e3-baf3-37d7b0629bbf",
+              "leftValue": "={{ $json.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0] ? true : false }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f011efb5-b965-40bc-90cb-b432a1ae8c77",
+      "name": "is real message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3aea05e7-7101-46db-a1e7-0284a63f824f",
+              "name": "customer_name",
+              "value": "={{ $json.body.entry[0].changes[0].value.contacts[0].profile.name }}",
+              "type": "string"
+            },
+            {
+              "id": "7ee508ef-ee7d-4ad0-85aa-62a437232a38",
+              "name": "phone_number",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].from }}",
+              "type": "string"
+            },
+            {
+              "id": "315a143b-f4c1-469d-b569-7f63502b33ac",
+              "name": "message_id",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "c0048b95-1d80-43ed-ad34-4fbacb3e2e8a",
+              "name": "time_stamp",
+              "value": "={{ DateTime.fromSeconds(Number($json.body.entry[0].changes[0].value.messages[0].timestamp)).toFormat(\"yyyy-MM-dd HH:mm\") }}",
+              "type": "string"
+            },
+            {
+              "id": "37399834-83ac-42f1-84bb-33a0fae42130",
+              "name": "message",
+              "value": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "5b0a63eb-d339-485f-9d74-146a754cc725",
+      "name": "extract whatsapp fields"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=   {{ JSON.stringify({ messaging_product: \"whatsapp\", to: $json.phone_number, type: \"text\", text: { body: $json.reply_text } }) }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3536,
+        -816
+      ],
+      "id": "34bb96bd-d3a7-4986-81ac-a900a7f13e8c",
+      "name": "build whatsapp payload"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:5678/webhook/mock-whatsapp-send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3632,
+        -560
+      ],
+      "id": "92d00b7d-2b86-4e3c-bcda-6f5cee0cad09",
+      "name": "send whatsapp message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6ac1f2bd-2362-4d01-965c-731bae7ba895",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        -560
+      ],
+      "id": "195e8c53-6e56-44fa-b466-d03e821b0cfe",
+      "name": "customer exists",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "phone",
+              "lookupValue": "={{ $('extract whatsapp fields').item.json.phone_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        -336
+      ],
+      "id": "441378a6-aa61-448b-af07-4a73bda26636",
+      "name": "find customer",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "last_message": "={{ $('extract whatsapp fields').item.json.message }}",
+            "last_interaction": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+            "customer_id": "={{ $json.customer_id }}"
+          },
+          "matchingColumns": [
+            "customer_id"
+          ],
+          "schema": [
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_message",
+              "displayName": "last_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_interaction",
+              "displayName": "last_interaction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "support_status",
+              "displayName": "support_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_date",
+              "displayName": "created_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        -688
+      ],
+      "id": "155bdaec-33ca-499d-9e20-379c66bcb38f",
+      "name": "update customer",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{ \"CUST-\" + $now.toMillis() }}",
+            "name": "={{ $('extract whatsapp fields').item.json.customer_name }}",
+            "phone": "=\t{{ $('extract whatsapp fields').item.json.phone_number }}",
+            "conversation_id": "={{ \"CONV-\" + $now.toMillis() }}",
+            "last_message": "=\t{{ $('extract whatsapp fields').item.json.message }}",
+            "last_interaction": "={{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+            "support_status": "open",
+            "created_date": "={{ $now.toFormat(\"yyyy-MM-dd\") }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_message",
+              "displayName": "last_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_interaction",
+              "displayName": "last_interaction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "support_status",
+              "displayName": "support_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_date",
+              "displayName": "created_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        992,
+        -464
+      ],
+      "id": "243ad3d8-9cb4-451c-87ac-e5ecf5c24e81",
+      "name": "create customer",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "phone",
+              "lookupValue": "={{ $('extract whatsapp fields').item.json.phone_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1248,
+        -608
+      ],
+      "id": "43a384a0-b6e9-4f78-873d-088bf160dea9",
+      "name": "get customer record",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 378959094,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=378959094"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "customer_id",
+              "lookupValue": "={{ $('get customer record').first().json.customer_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1600,
+        -768
+      ],
+      "id": "db23eaac-395e-4c94-b380-04d071005c09",
+      "name": "Get History",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0",
+          "mode": "list",
+          "cachedResultName": "SwiftCart Knowledge",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "products",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1696,
+        -592
+      ],
+      "id": "2c9066b9-83e4-45ee-8dba-0908df95335c",
+      "name": "Get Products",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0",
+          "mode": "list",
+          "cachedResultName": "SwiftCart Knowledge",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1364422173,
+          "mode": "list",
+          "cachedResultName": "policies",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0/edit#gid=1364422173"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1920,
+        -592
+      ],
+      "id": "92c8ec2d-3d44-4f8f-a690-a9888b30008a",
+      "name": "Get Policies",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0",
+          "mode": "list",
+          "cachedResultName": "SwiftCart Knowledge",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1654851918,
+          "mode": "list",
+          "cachedResultName": "FAQ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FPUQQbZDIAXwfp51YV8xaGX1zLrzAwLctIlbKJhmni0/edit#gid=1654851918"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2112,
+        -592
+      ],
+      "id": "78782208-1770-4049-8f8d-d64cc9bf0c6e",
+      "name": "Get FAQ",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ext = $('extract whatsapp fields').first().json;\nconst cust = $('get customer record').first().json;\nconst products = $('Get Products').all().map(i => i.json);\nconst policies = $('Get Policies').all().map(i => i.json);\nconst faqs = $('Get FAQ').all().map(i => i.json);\nconst history = $('Get History').all().map(i => i.json).filter(r => r.message).slice(-6);\n\n// pick relevant knowledge from the earlier customer messages + the new one\nconst text = (history.filter(h => h.sender === \"customer\").map(h => h.message).join(\" \") + \" \" + ext.message).toLowerCase();\nconst has = re => re.test(text);\nconst policyTopics = [\"Company\"];\nconst faqCats = [];\nif (has(/deliver|ship|courier|arriv|parcel|track|dispatch|order/)) { policyTopics.push(\"Delivery\"); faqCats.push(\"Delivery\", \"Orders\"); }\nif (has(/return|refund|money back|replace|exchange/)) { policyTopics.push(\"Returns\", \"Refund\"); faqCats.push(\"Returns\"); }\nif (has(/warrant|guarantee/)) policyTopics.push(\"Warranty\");\nif (has(/pay|jazzcash|easypaisa|cash on|cod|bank|card|charged|installment/)) { policyTopics.push(\"Payment\"); faqCats.push(\"Payment\"); }\nif (has(/not working|not charging|connect|pair|wifi|wi-fi|setup|set up|reset|battery|broken|dead|won't|doesn't/)) faqCats.push(\"Technical\");\n\nconst lines = [];\nconst named = products.filter(p => text.includes(String(p.name).toLowerCase().split(\" \")[0]));\nif (named.length) {\n  named.forEach(p => lines.push(`PRODUCT: ${p.name} | ${p.description} | Specs: ${p.specs} | Price: PKR ${p.price_pkr} | Warranty: ${p.warranty} | Stock: ${p.stock_status}`));\n} else {\n  products.forEach(p => lines.push(`PRODUCT: ${p.name} | PKR ${p.price_pkr}`));\n}\npolicies.filter(p => policyTopics.includes(p.topic)).forEach(p => lines.push(`POLICY (${p.topic}) ${p.title}: ${p.content}`));\nfaqs.filter(f => faqCats.includes(f.category)).forEach(f => lines.push(`FAQ: ${f.question} -> ${f.answer}`));\nconst knowledge = lines.join(\"\\n\");\n\nconst SYSTEM_PROMPT = `You are the virtual support assistant for SwiftCart Electronics, an online gadget store in Pakistan. You chat with customers on WhatsApp.\n\nTONE\n- Warm, polite and calm. Professional but friendly, like a helpful support agent.\n- Short WhatsApp style: at most 3 short sentences, simple words, no jargon, no long lists.\n- Use the customer's first name only in the first message of a conversation. Do not greet again later.\n- If the customer is upset, apologise once, briefly, then help.\n- Follow the LANGUAGE FOR THIS REPLY line below. When it says Roman Urdu, write the whole reply in Roman Urdu (Urdu in English letters), for example \"Meherbani karke apna order number bata dein.\"\n- If asked, say you are SwiftCart's virtual assistant.\n\nFACTS\n- Use ONLY the KNOWLEDGE BASE below for facts. Never invent prices, dates, stock, specifications, discounts, policies or order status.\n- You cannot see or check individual orders, and you cannot approve refunds, replacements or exceptions. The support team does that. Never say that you will check an order yourself. Say the support team will check it.\n- If the answer is not in the knowledge base, say you do not have that information and a team member will help. Set needs_human to true.\n- Do not promise how fast the team will reply. Never use the words \"soon\" or \"shortly\".\n- Never say or imply that a refund, replacement or return will be given. Say the support team will review the request.\n- Answer the question first, in plain words. Do not add sales lines such as \"let me know if you want to buy\".\n\nCONVERSATION\n- Read the earlier messages. Use them to understand follow-ups such as \"it\", \"that one\" or \"what about the price?\".\n- Never ask for information the customer already gave in this conversation or that is in the customer details. Check before you ask.\n- If information is missing, ask for it, ONE question at a time. Needed information:\n  * order status or delivery problem: order number\n  * return, refund or warranty claim: order number, product, and what is wrong\n  * technical problem: product name and what happens\n  * payment problem such as a double charge: order number and a screenshot of the payment\n- When you have everything and the request needs the support team (order check, return, refund, warranty claim, payment problem, complaint), repeat the key details in one sentence, say the support team will take it from here, and set needs_human to true.\n- THE ESCALATION RULES BELOW OVERRIDE ALL OTHER RULES ABOVE. For human_requested, complaint and sensitive_account, never ask for missing information first: escalate in this same reply. For refund_dispute, the only information needed before escalating is the order number, which may already be in the customer message; do not ask for a payment screenshot or other details, the support team will ask. Detect these cases in Roman Urdu too (for example: naraz, bohat kharab service, bakwas, insaan se baat karni hai).\n- Set escalation_reason and needs_human to true in these cases:\n  * human_requested: the customer asks for a human, agent, manager or representative. Escalate immediately.\n  * complaint: the customer is angry, abusive, or still unhappy after your help. Escalate immediately.\n  * sensitive_account: the customer mentions a password, card number, hacked account or personal data. Escalate immediately. Never ask the customer to share a password or card number.\n  * refund_dispute: the customer disputes a refund, or was charged twice. Ask for the order number first. Once you have it, escalate.\n  * unclear_question: you already asked ONE clarifying question and still cannot understand the customer.\n  * repeated_failure: you already could not answer this customer earlier in this conversation and still cannot.\n  Asking for an order number is normal missing information and is NOT unclear_question. Otherwise escalation_reason is \"none\".\n- When you escalate, say in one short sentence that a team member will help. Do not try to solve the problem yourself.\n- Set answer_failed to true only if the answer is not in the knowledge base.\n- Answer questions directly from the knowledge base when you can. Do not ask for details you do not need.\n- conversation_status: \"resolved\" when you fully answered the question, \"waiting_for_customer\" when you asked the customer something, \"escalated\" when needs_human is true, \"open\" otherwise.\n\nOUTPUT\nReturn ONLY a JSON object, with no other text, even if earlier assistant messages were plain text:\n{\"reply\":\"message for the customer\",\"intent\":\"one short sentence\",\"category\":\"Product Information | Pricing | Order Status | Delivery | Payment | Return | Refund | Warranty | Complaint | Technical Support | Human Assistance | General Inquiry\",\"urgency\":\"low | medium | high\",\"collected_info\":{\"order_id\":null,\"product\":null,\"issue\":null},\"missing_info\":[],\"needs_human\":false,\"escalation_reason\":\"none | human_requested | complaint | sensitive_account | refund_dispute | unclear_question | repeated_failure\",\"answer_failed\":false,\"conversation_status\":\"open | waiting_for_customer | resolved | escalated\"}`;\n\nconst firstName = String(ext.customer_name || \"\").split(\" \")[0];\n\n// decide the reply language in code, not only in the prompt\nconst urduWords = /\\b(mera|meri|mujhe|nahi|nahin|kya|kahan|kab|kitni|kitna|aya|aaya|ho gaye|bata|batao|chahiye|karna|karo|aap|apna|din)\\b/i;\nconst lastCustomer = history.filter(h => h.sender === \"customer\").slice(-1).map(h => h.message).join(\" \");\nconst languageNote = urduWords.test(lastCustomer + \" \" + ext.message) ? \"\\nLANGUAGE FOR THIS REPLY: Roman Urdu. Write the whole reply in Roman Urdu (Urdu in English letters).\" : \"\\nLANGUAGE FOR THIS REPLY: English.\";\n\nconst context = `\\n\\nCUSTOMER DETAILS: first name: ${firstName}; phone: ${ext.phone_number}\\nEARLIER MESSAGES IN THIS CONVERSATION: ${history.length}${languageNote}\\n\\nKNOWLEDGE BASE:\\n${knowledge}`;\nconst chat = history.map(h => ({ role: h.sender === \"bot\" ? \"assistant\" : \"user\", content: String(h.message).slice(0, 300) }));\n\nreturn [{ json: {\n  customer_id: cust.customer_id, conversation_id: cust.conversation_id,\n  customer_name: ext.customer_name, phone_number: ext.phone_number, message: ext.message,\n  history_count: history.length, knowledge,\n  body: {\n    model: \"openai/gpt-oss-20b\",\n    temperature: 0.2,\n    response_format: { type: \"json_object\" },\n    messages: [ { role: \"system\", content: SYSTEM_PROMPT + context }, ...chat, { role: \"user\", content: ext.message } ]\n  }\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2336,
+        -576
+      ],
+      "id": "ff4b65b8-a71e-480e-b720-fd5108fadfea",
+      "name": "Build Agent Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2512,
+        -592
+      ],
+      "id": "6dbb12d9-aee0-443e-bedf-cc498e42eea8",
+      "name": "Ask AI",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jQNXldwySl7ux6Qg",
+          "name": "Groq Api Key"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const req = $('Build Agent Request').first().json;\nconst reasons = ['complaint','refund_dispute','sensitive_account','unclear_question','repeated_failure','human_requested','none'];\nconst fallback = { reply: \"Thank you for your message. A team member will help you with this.\", intent: \"AI answer could not be read\", category: \"Human Assistance\", urgency: \"medium\", collected_info: {}, missing_info: [], needs_human: true, escalation_reason: \"system_error\", answer_failed: true, conversation_status: \"escalated\", parse_error: true };\nlet ai;\ntry {\n  const text = ($json.choices?.[0]?.message?.content || \"\").replace(/```json|```/g, \"\").trim();\n  ai = JSON.parse(text);\n  if (typeof ai.reply !== \"string\" || !ai.reply.trim()) ai = fallback;\n} catch (e) { ai = fallback; }\nlet reason = (reasons.includes(ai.escalation_reason) || ai.escalation_reason === \"system_error\") ? ai.escalation_reason : \"none\";\nconst needsHuman = ai.needs_human === true || reason !== \"none\";\nif (needsHuman && reason === \"none\") reason = \"other\";\nreturn { json: {\n  customer_id: req.customer_id, conversation_id: req.conversation_id, customer_name: req.customer_name,\n  phone_number: req.phone_number, message: req.message,\n  reply_text: ai.reply, intent: ai.intent, category: ai.category, urgency: ai.urgency,\n  collected_info: ai.collected_info, missing_info: ai.missing_info,\n  needs_human: needsHuman, escalation_reason: reason, answer_failed: ai.answer_failed === true,\n  conversation_status: needsHuman ? \"escalated\" : (ai.conversation_status || \"open\"),\n  parse_error: ai.parse_error === true\n} };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2704,
+        -480
+      ],
+      "id": "db27c0e0-27b1-4adf-8099-058a446f23d1",
+      "name": "Read Agent Reply"
+    },
+    {
+      "parameters": {
+        "jsCode": "   const r = $input.first().json;\n   const ts = $now.toFormat(\"yyyy-MM-dd HH:mm\");\n   return [\n     { json: { conversation_id: r.conversation_id, customer_id: r.customer_id, message: r.message, sender: \"customer\", timestamp: ts, intent: r.category, resolution_status: r.conversation_status } },\n     { json: { conversation_id: r.conversation_id, customer_id: r.customer_id, message: r.reply_text, sender: \"bot\", timestamp: ts, intent: r.category, resolution_status: r.conversation_status } }\n   ];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3008,
+        -576
+      ],
+      "id": "07a7b9d5-c47a-46c8-b34a-7d12d5d9e375",
+      "name": "Prepare Rows"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 378959094,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=378959094"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resolution_status",
+              "displayName": "resolution_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3232,
+        -576
+      ],
+      "id": "abbe2483-f412-4082-8ff5-d90b998a6a49",
+      "name": "Append row in sheet",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1355363779,
+          "mode": "list",
+          "cachedResultName": "Support Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=1355363779"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2112,
+        -48
+      ],
+      "id": "be9b96fd-486b-47e6-912d-25b69b4fa9ef",
+      "name": "Get Tickets",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $('Read Agent Reply').first().json;\nconst tickets = $('Get Tickets').all().map(i => i.json).filter(t => t.ticket_id);\n\nconst mine = tickets.filter(t => t.customer_id === r.customer_id && [\"Open\", \"In Progress\", \"Human Review\"].includes(t.status));\nconst existing = mine[mine.length - 1];\nconst hasOpen = mine.length > 0;\nconst nums = tickets.map(t => parseInt(String(t.ticket_id).replace(\"TCK-\", \"\"), 10)).filter(n => !isNaN(n));\nconst next = (nums.length ? Math.max(...nums) : 0) + 1;\nconst ticketId = \"TCK-\" + String(next).padStart(4, \"0\");\n\nreturn [{ json: { ...r,\n  create_ticket: r.needs_human === true && !hasOpen,\n  has_open_ticket: hasOpen,\n  ticket_id: ticketId,\n  existing_ticket_id: existing ? existing.ticket_id : \"\",\n  update_existing: r.needs_human === true && !!existing && existing.status !== \"Human Review\"\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2352,
+        -64
+      ],
+      "id": "1dd68039-6508-4932-a907-8db3e97996c3",
+      "name": "Ticket Decision"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst hist = $('Get History').all().map(i => i.json).filter(h => h.message).slice(-6);\nconst convo = hist.map(h => `${h.sender === \"bot\" ? \"Agent\" : \"Customer\"}: ${String(h.message).slice(0, 300)}`).join(\"\\n\")\n  + `\\nCustomer: ${d.message}\\nAgent: ${d.reply_text}\\nEscalation reason: ${d.escalation_reason}`;\n\nconst SYSTEM = `You create support tickets for SwiftCart Electronics, an online gadget store in Pakistan. You read a chat between a customer and the virtual agent, and you write a ticket for the human support team.\n\nReturn ONLY a JSON object:\n{\"issue\":\"...\",\"summary\":\"...\",\"priority\":\"General Inquiry | Normal | Important | Urgent\",\"category\":\"...\",\"reason\":\"...\"}\n\nRules:\n- issue: the customer's problem in one short sentence (maximum 20 words). Use facts from the chat only.\n- summary: 2 to 3 short sentences for the support agent: what happened, what the customer already gave (order number, product), and what is still needed. Do not invent facts. Write in English even if the customer used Roman Urdu.\n- category: one of Product Information, Pricing, Order Status, Delivery, Payment, Return, Refund, Warranty, Complaint, Technical Support, Human Assistance, General Inquiry.\n- priority:\n  * Urgent: the customer lost money (double charge, wrong amount), made a legal threat, reports a safety danger (overheating, fire, injury), or is very angry after repeated failures.\n  * Important: faulty or damaged product, return, refund or warranty claim, an order later than the normal delivery time (3 to 5 working days, up to 7 for remote areas), or the customer asks for a manager.\n  * Normal: a routine order status or delivery check, or a minor product problem.\n  * General Inquiry: a question the knowledge base could not answer, with no problem to fix (for example a product detail or a store location).\n- The last line of the chat is \"Escalation reason\", the reason the agent handed over. human_requested: priority at least Normal. complaint or refund_dispute: priority at least Important. sensitive_account: Urgent. Mention the escalation reason in the summary.\n- reason: one short sentence explaining why you chose this priority.`;\n\nreturn [{ json: { ...d, body: {\n  model: \"openai/gpt-oss-20b\",\n  temperature: 0,\n  response_format: { type: \"json_object\" },\n  messages: [ { role: \"system\", content: SYSTEM }, { role: \"user\", content: convo } ]\n} } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        -96
+      ],
+      "id": "a9f87ea2-1c28-4583-8368-a431eaa68dce",
+      "name": "Ticket AI Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const dec = $('Ticket Decision').first().json;\nconst d = $('Ticket AI Request').first().json;\nconst fallback = {\n  issue: d.message,\n  summary: \"Customer needs help. The AI summary could not be created. Last customer message: \" + d.message,\n  priority: \"Normal\", category: d.category || \"Human Assistance\",\n  reason: \"AI summary unavailable, default priority used\"\n};\nlet t;\ntry {\n  const text = ($json.choices?.[0]?.message?.content || \"\").replace(/```json|```/g, \"\").trim();\n  t = JSON.parse(text);\n  if (!t.summary || !t.priority) t = fallback;\n} catch (e) { t = fallback; }\n\nconst PRIORITIES = [\"General Inquiry\", \"Normal\", \"Important\", \"Urgent\"];\nif (!PRIORITIES.includes(t.priority)) t.priority = \"Normal\";\n\n// Step 8: simulated assignment (fictional team)\nconst TEAM = {\n  \"Return\": \"Ayesha Khan (Returns and Warranty)\", \"Refund\": \"Ayesha Khan (Returns and Warranty)\", \"Warranty\": \"Ayesha Khan (Returns and Warranty)\",\n  \"Order Status\": \"Bilal Ahmed (Orders and Delivery)\", \"Delivery\": \"Bilal Ahmed (Orders and Delivery)\",\n  \"Payment\": \"Sana Malik (Payments)\", \"Technical Support\": \"Usman Tariq (Technical Support)\"\n};\nconst ROTATION = [\"Bilal Ahmed (Orders and Delivery)\", \"Usman Tariq (Technical Support)\", \"Sana Malik (Payments)\"];\nconst n = parseInt(String(d.ticket_id).replace(\"TCK-\", \"\"), 10) || 0;\nlet assignedTo = TEAM[t.category] || ROTATION[n % ROTATION.length];\nif (t.priority === \"Urgent\") assignedTo = \"Hira Noor (Escalations Lead)\";\n\nreturn { json: {\n  ticket_id: d.ticket_id, customer_id: d.customer_id, conversation_id: d.conversation_id,\n  category: t.category, issue: t.issue, summary: t.summary,\n  priority: t.priority, priority_reason: t.reason,\n  status: \"Human Review\", escalation_reason: dec.escalation_reason || \"\", assigned_to: assignedTo,\n  created_date: $now.toFormat(\"yyyy-MM-dd HH:mm\"), resolved_date: \"\", resolution: \"\"\n} };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3232,
+        -96
+      ],
+      "id": "c286b93e-07dd-4752-bfbe-4259dffb2fb9",
+      "name": "Build Ticket"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1355363779,
+          "mode": "list",
+          "cachedResultName": "Support Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=1355363779"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority_reason",
+              "displayName": "priority_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_to",
+              "displayName": "assigned_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_date",
+              "displayName": "created_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resolved_date",
+              "displayName": "resolved_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resolution",
+              "displayName": "resolution",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3456,
+        -80
+      ],
+      "id": "11f055ae-0982-47e3-9adb-30f34afa039c",
+      "name": "Create Ticket",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3024,
+        -64
+      ],
+      "id": "c361d6fe-e817-4226-ae21-0243c2d2153a",
+      "name": "Ask Ticket AI",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jQNXldwySl7ux6Qg",
+          "name": "Groq Api Key"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "58a7ef3c-a7dc-47cb-a475-2bda58774407",
+              "leftValue": "={{ $json.create_ticket }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2544,
+        -64
+      ],
+      "id": "9d336550-1b38-4431-b18c-e2241bd0a618",
+      "name": "Should Create Ticket"
+    },
+    {
+      "parameters": {
+        "fromEmail": "your-email@example.com",
+        "toEmail": "your-email@example.com",
+        "subject": "=[{{ $('Build Ticket').first().json.priority }}] Human Review: {{ $('Build Ticket').first().json.ticket_id }}",
+        "emailFormat": "text",
+        "text": "=HUMAN REVIEW NEEDED\n\nTicket: {{ $('Build Ticket').first().json.ticket_id }}\nPriority: {{ $('Build Ticket').first().json.priority }} ({{ $('Build Ticket').first().json.priority_reason }})\nAssigned to: {{ $('Build Ticket').first().json.assigned_to }}\nEscalation reason: {{ $('Ticket Decision').first().json.escalation_reason }}\n\nCUSTOMER\nName: {{ $('Ticket Decision').first().json.customer_name }}\nPhone: {{ $('Ticket Decision').first().json.phone_number }}\nCustomer ID: {{ $('Build Ticket').first().json.customer_id }}\n\nISSUE\n{{ $('Build Ticket').first().json.issue }}\n\nSUMMARY\n{{ $('Build Ticket').first().json.summary }}\n\nAI ANALYSIS\nIntent: {{ $('Ticket Decision').first().json.intent }}\nCategory: {{ $('Ticket Decision').first().json.category }}\nUrgency: {{ $('Ticket Decision').first().json.urgency }}\nCollected info: {{ JSON.stringify($('Ticket Decision').first().json.collected_info) }}\n\nCONVERSATION\n{{ $('Get History').all().map(i => i.json).filter(h => h.message).slice(-6).map(h => (h.sender === 'bot' ? 'Agent: ' : 'Customer: ') + h.message).join('\\n') }}\nCustomer: {{ $('Ticket Decision').first().json.message }}\nAgent: {{ $('Ticket Decision').first().json.reply_text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3648,
+        -160
+      ],
+      "id": "a836ab7b-322c-41d5-9832-f061ae5366e8",
+      "name": "Send Escalation Email",
+      "webhookId": "258787b7-76c3-486c-ba83-83e3bc196baa",
+      "credentials": {
+        "smtp": {
+          "id": "CsDkxX2Uq5Vjo6Jh",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1355363779,
+          "mode": "list",
+          "cachedResultName": "Support Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=1355363779"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1232,
+        -176
+      ],
+      "id": "45807939-eb2b-435f-a8a1-b1daaf9b5b78",
+      "name": "Get Tickets Early",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cust = $('get customer record').first().json;\nconst tickets = $('Get Tickets Early').all().map(i => i.json).filter(t => t.ticket_id);\nconst handoff = tickets.some(t => t.customer_id === cust.customer_id && t.status === 'Human Review');\nreturn [{ json: { ...cust, handoff } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        -176
+      ],
+      "id": "ff1593dc-3659-472f-8c2a-fbf449b45d61",
+      "name": "Human Review Check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aaee0e15-09e8-4def-892e-691791bc1c63",
+              "leftValue": "={{ $json.handoff }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        -192
+      ],
+      "id": "2190962e-55d9-49e1-a81e-efb0270e4a3b",
+      "name": "Handoff Active?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 378959094,
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=378959094"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{ $json.customer_id }}",
+            "message": "={{ $('extract whatsapp fields').first().json.message }}",
+            "sender": "customer",
+            "timestamp": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+            "intent": "held for human",
+            "resolution_status": "human_review",
+            "conversation_id": "={{ $json.conversation_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "conversation_id 923000000325",
+              "displayName": "conversation_id 923000000325",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resolution_status",
+              "displayName": "resolution_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        -208
+      ],
+      "id": "2f2b2cd6-4571-4c7b-a3ec-afbfce8e5f64",
+      "name": "Log Held Message",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "af2cd1c7-1235-4b2e-abb8-16851ce029f1",
+              "leftValue": "={{ $json.update_existing }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2640,
+        96
+      ],
+      "id": "7572a9e0-d9ca-489e-b770-55aaf41f0053",
+      "name": "Update Existing?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1355363779,
+          "mode": "list",
+          "cachedResultName": "Support Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=1355363779"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ticket_id": "={{ $json.existing_ticket_id }}",
+            "status": "Human Review",
+            "escalation_reason": "={{ $json.escalation_reason }}"
+          },
+          "matchingColumns": [
+            "ticket_id"
+          ],
+          "schema": [
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "priority_reason",
+              "displayName": "priority_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_to",
+              "displayName": "assigned_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_date",
+              "displayName": "created_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resolved_date",
+              "displayName": "resolved_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resolution",
+              "displayName": "resolution",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "escalation_reason",
+              "displayName": "escalation_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2880,
+        96
+      ],
+      "id": "927ce7da-a324-4efd-aff9-e4a7352c76d6",
+      "name": "Set Human Review",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Step 1-2: Webhook and extract fields"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -288
+      ],
+      "id": "6154dcad-d3de-4ddf-aeb5-cd28c2798869",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Step 3: Find or create customer"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -784
+      ],
+      "id": "de7b1457-f580-46a6-a4dc-346d6c937c5b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Step 5-6 aur 7: AI classification and knowledge base"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        -800
+      ],
+      "id": "49f93ec5-8a50-4610-adef-2761117fdb87",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Step 4 aur 10: Store messages"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3072,
+        -896
+      ],
+      "id": "c2deefc8-57ed-4d2f-9200-f359e77da348",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Step 9: Send reply"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3792,
+        -816
+      ],
+      "id": "269e89d7-24bf-4a10-b4fd-dc0e2dffb24d",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Step 8: Ticket branch"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        -256
+      ],
+      "id": "681dc8f4-df05-423f-998a-66dbb7609baa",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "Human hold (Phase 8)"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        -400
+      ],
+      "id": "b26b076e-5ee7-4ee2-8453-d52de12754b1",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "={{ $json.customer_id }}",
+            "support_status": "={{ $json.needs_human ? 'Human Review' : ($json.conversation_status === 'resolved' ? 'Resolved' : ($json.conversation_status === 'waiting_for_customer' ? 'Waiting for customer' : 'Open')) }}"
+          },
+          "matchingColumns": [
+            "customer_id"
+          ],
+          "schema": [
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_message",
+              "displayName": "last_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_interaction",
+              "displayName": "last_interaction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "support_status",
+              "displayName": "support_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_date",
+              "displayName": "created_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2992,
+        -320
+      ],
+      "id": "bcbdf85e-d3c3-4735-88e3-8d1e9c85ec55",
+      "name": "Update Customer Status",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "is real message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is real message": {
+      "main": [
+        [
+          {
+            "node": "extract whatsapp fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract whatsapp fields": {
+      "main": [
+        [
+          {
+            "node": "find customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build whatsapp payload": {
+      "main": [
+        [
+          {
+            "node": "send whatsapp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find customer": {
+      "main": [
+        [
+          {
+            "node": "customer exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "customer exists": {
+      "main": [
+        [
+          {
+            "node": "update customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update customer": {
+      "main": [
+        [
+          {
+            "node": "get customer record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create customer": {
+      "main": [
+        [
+          {
+            "node": "get customer record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get customer record": {
+      "main": [
+        [
+          {
+            "node": "Get Tickets Early",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get History": {
+      "main": [
+        [
+          {
+            "node": "Get Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get FAQ": {
+      "main": [
+        [
+          {
+            "node": "Build Agent Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Products": {
+      "main": [
+        [
+          {
+            "node": "Get Policies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Policies": {
+      "main": [
+        [
+          {
+            "node": "Get FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Agent Request": {
+      "main": [
+        [
+          {
+            "node": "Ask AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask AI": {
+      "main": [
+        [
+          {
+            "node": "Read Agent Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Agent Reply": {
+      "main": [
+        [
+          {
+            "node": "Prepare Rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "build whatsapp payload",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Tickets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Customer Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Rows": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Get Tickets": {
+      "main": [
+        [
+          {
+            "node": "Ticket Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket Decision": {
+      "main": [
+        [
+          {
+            "node": "Should Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket AI Request": {
+      "main": [
+        [
+          {
+            "node": "Ask Ticket AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Ticket": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Send Escalation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Ticket AI": {
+      "main": [
+        [
+          {
+            "node": "Build Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Ticket AI Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Existing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tickets Early": {
+      "main": [
+        [
+          {
+            "node": "Human Review Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Review Check": {
+      "main": [
+        [
+          {
+            "node": "Handoff Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handoff Active?": {
+      "main": [
+        [
+          {
+            "node": "Log Held Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Existing?": {
+      "main": [
+        [
+          {
+            "node": "Set Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "EBrYyHyQduzLWJFT",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "93376bf1-280a-4eef-9dbe-f26e78225c53",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4d55bd4cc83f56b00c3bda6e5957c150430c92e73f9b7e1f610a24039998b340"
+  },
+  "nodeGroups": [],
+  "id": "k3SIpLWUNzimGHVN",
+  "tags": []
+}

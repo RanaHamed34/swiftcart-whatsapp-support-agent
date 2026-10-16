@@ -1,0 +1,568 @@
+{
+  "name": "SwiftCart - 03 Update Ticket",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-ticket",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6b01c33a-de75-484c-8eb9-75692fdc3e4e",
+      "name": "Webhook",
+      "webhookId": "e09c1c43-a543-4d9a-b319-2aa5c1355cf5"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1355363779,
+          "mode": "list",
+          "cachedResultName": "Support Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=1355363779"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ticket_id",
+              "lookupValue": "={{ $json.body.ticket_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "553e3b62-1c8a-4e3c-8168-0178410f2722",
+      "name": "Get Ticket",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const req = $('Webhook').first().json.body || {};\nconst ticket = $input.all().map(i => i.json).find(t => t.ticket_id);\nconst valid = [\"Open\", \"In Progress\", \"Resolved\"];\n\nlet ok = true;\nlet message = \"Ticket updated\";\nif (!req.ticket_id) { ok = false; message = \"No ticket_id in the request\"; }\nelse if (!ticket) { ok = false; message = \"Ticket \" + req.ticket_id + \" not found in the sheet\"; }\nelse if (!valid.includes(req.status)) { ok = false; message = \"Status must be Open, In Progress or Resolved. Received: \" + req.status; }\nelse if (req.status === \"Resolved\" && !req.resolution) { ok = false; message = \"A resolution is required for a Resolved ticket\"; }\n\nreturn [{ json: {\n  ok, ticket_id: req.ticket_id, status: req.status, resolution: req.resolution || \"\",\n  resolved_date: req.status === \"Resolved\" ? $now.toFormat(\"yyyy-MM-dd HH:mm\") : \"\",\n  message\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "3c8b913e-31e8-4720-a622-394156fc3e8d",
+      "name": "Validate Update"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "80ebc72c-51b8-4bee-ba5c-461bbe729f11",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "9301c50c-5844-48a2-b5bf-6b068f4fd3bf",
+      "name": "Update OK"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1355363779,
+          "mode": "list",
+          "cachedResultName": "Support Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=1355363779"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "resolution": "={{ $json.resolution }}",
+            "resolved_date": "={{ $json.resolved_date }}",
+            "ticket_id": "={{ $json.ticket_id }}"
+          },
+          "matchingColumns": [
+            "ticket_id"
+          ],
+          "schema": [
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "issue",
+              "displayName": "issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "priority_reason",
+              "displayName": "priority_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_to",
+              "displayName": "assigned_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_date",
+              "displayName": "created_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "resolved_date",
+              "displayName": "resolved_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resolution",
+              "displayName": "resolution",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "da2bb705-5ec4-4ab2-9144-6c0a7398cfa8",
+      "name": "Update Ticket Row",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, ticket_id: $('Validate Update').first().json.ticket_id, status: $('Validate Update').first().json.status }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "d6bc810e-453e-4b1d-8d73-ace9e21de8e7",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, message: $json.message }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        96
+      ],
+      "id": "fcd6992a-1111-4db4-87a6-0d657c024a62",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU",
+          "mode": "list",
+          "cachedResultName": "customer support database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HNVmtYkt3lzGfN7y1zD14FmOqUYW-VHv5IJaVYg8dHU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customer_id": "=\t{{ $('Get Ticket').first().json.customer_id }}",
+            "support_status": "=\t{{ $('Webhook').first().json.body.status }}"
+          },
+          "matchingColumns": [
+            "customer_id"
+          ],
+          "schema": [
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_message",
+              "displayName": "last_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_interaction",
+              "displayName": "last_interaction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "support_status",
+              "displayName": "support_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_date",
+              "displayName": "created_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        -272
+      ],
+      "id": "b8216867-cd8b-4d3a-97ed-e31fed567d4d",
+      "name": "Update Customer Status",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7FBJJpnzrBu8fQqt",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Ticket": {
+      "main": [
+        [
+          {
+            "node": "Validate Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Update": {
+      "main": [
+        [
+          {
+            "node": "Update OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update OK": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Customer Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "EBrYyHyQduzLWJFT",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "9cca8c32-ca48-452e-9876-b33c40d623cc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4d55bd4cc83f56b00c3bda6e5957c150430c92e73f9b7e1f610a24039998b340"
+  },
+  "nodeGroups": [],
+  "id": "BYrKrvYXr9ITI70z",
+  "tags": []
+}

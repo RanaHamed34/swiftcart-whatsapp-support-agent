@@ -1,0 +1,21 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "TEST_WABA_ID",
+    "changes": [{
+      "field": "messages",
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": { "display_phone_number": "15550000000", "phone_number_id": "TEST_PHONE_ID" },
+        "contacts": [{ "profile": { "name": "Test Pipeline" }, "wa_id": "923000000901" }],
+        "messages": [{
+          "from": "923000000901",
+          "id": "wamid.P901A",
+          "timestamp": "1759431000",
+          "type": "text",
+          "text": { "body": "What products do you sell and what are their prices?" }
+        }]
+      }
+    }]
+  }]
+}
